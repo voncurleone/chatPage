@@ -1,5 +1,31 @@
-@()
+@()(implicit requestHeader: RequestHeader, flash: Flash)
 
 @main("Chat") {
-  <h1>Welcome to Chat!</h1>
+
+  <div id="login-div">
+    <h2>Login</h2>
+    Username: <input type="text" id="username">
+    <br>
+    <button onclick="login()">login</button>
+
+    <br>
+    <div id="login-message"></div>
+  </div>
+
+  <div id="chat-div" hidden>
+    <h1>Welcome to Chat!</h1>
+    <textarea id="chat" rows="15" cols="80"></textarea>
+    <br>
+    <input type="text" id="input" size="80">
+    <button onclick="send()">Send</button>
+  </div>
+
+  <!-- csrfToken -->
+  <input type="hidden" id="csrf-token" value="@helper.CSRF.getToken.value">
+
+  <!-- routes -->
+  <input type="hidden" id="validate-route" value="@routes.HomeController.validateLogin">
+
+  <!-- javascript -->
+  <script src="@routes.Assets.versioned("javascripts/chat.js")"></script>
 }
