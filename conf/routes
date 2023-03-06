@@ -8,5 +8,6 @@ GET     /                           controllers.HomeController.index()
 POST    /validate                   controllers.HomeController.validateLogin
 
 GET     /ws                         controllers.HomeController.socket
+GET     /wsSession                  controllers.HomeController.socketSession
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

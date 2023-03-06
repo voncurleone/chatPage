@@ -6,16 +6,14 @@ import akka.actor.ActorRef
 import akka.actor.{Actor, Props}
 import controllers.WebProtocol
 
-class ChatActor(client: ActorRef, manager: ActorRef) extends Actor {
+class ChatActor(client: ActorRef, manager: ActorRef, username: String) extends Actor {
   manager ! ChatManager.AddUser(self)
 
   override def receive: Receive = {
     case msg: String =>
-      val un = msg.takeWhile(_ != '$')
-      manager ! ChatManager.SendMessage(un, msg.takeRight(msg.length - un.length))
-
+      manager ! ChatManager.SendMessage(username, msg)
     case Msg(text) => client ! text
-    case m => println(m)
+    case m => println("Unhandled by ChatActor: " + m)
   }
 }
 
@@ -23,7 +21,7 @@ object ChatActor {
   trait Protocol extends WebProtocol
   case class Msg(text: String) extends Protocol
 
-  def props(client: ActorRef, manager: ActorRef) = {
-    Props(new ChatActor(client, manager))
+  def props(client: ActorRef, manager: ActorRef, username: String) = {
+    Props(new ChatActor(client, manager, username))
   }
 }

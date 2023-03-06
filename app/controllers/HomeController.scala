@@ -4,13 +4,16 @@ import actors.{ChatActor, ChatManager}
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.stream.Materializer
+import akka.stream.scaladsl.Flow
 
 import javax.inject._
 import play.api._
 import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
 import play.api.libs.streams.ActorFlow
+import play.api.mvc.WebSocket.MessageFlowTransformer.stringMessageFlowTransformer
 import play.api.mvc._
 
+import scala.concurrent.Future
 
 trait WebProtocol
 
@@ -37,9 +40,19 @@ class HomeController @Inject()(val cc: ControllerComponents)(implicit system: Ac
   }
 
   def socket = WebSocket.accept[String, String] { request =>
-    ActorFlow.actorRef( out =>
-      ChatActor.props(out, manager)
-    )
+    ActorFlow.actorRef { out =>
+      ChatActor.props(out, manager, "guest")
+    }
+  }
+
+  def socketSession = WebSocket.acceptOrResult { request =>
+    Future.successful(request.session.get("username") match {
+      case None => Left(Forbidden)
+      case Some(username) =>
+        Right(ActorFlow.actorRef(out =>
+          ChatActor.props(out, manager, username)
+        ))
+    })
   }
 
   def validateLogin = Action { implicit request =>

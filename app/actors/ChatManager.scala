@@ -9,11 +9,12 @@ class ChatManager() extends Actor {
   private var users = List.empty[ActorRef]
 
   override def receive: Receive = {
-    case AddUser(user) => users = user :: users
+    case AddUser(user) =>
+      users = user :: users
     case SendMessage(un, text) => for( u <- users ) {
       u ! Msg(un + ": " + text)
     }
-    case m => println(m)
+    case m => println("Unhandled by chatManager: " + m)
   }
 }
 
