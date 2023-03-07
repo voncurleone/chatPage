@@ -40,30 +40,39 @@ function clearMessages() {
 //login button
 function login() {
   const username = document.getElementById("username").value;
-  console.log("logging in as: " + username);
+  const password = document.getElementById("password").value;
+  console.log("logging in as: " + username + ", " + password);
 
   fetch(validateRoute, {
     method: "post",
     headers: { "Content-Type": "application/json", "Csrf-Token": csrfToken },
-    body: JSON.stringify(username)
-  }).then(result => result.json()).then( success => {
-    console.log(success);
+    body: JSON.stringify({username, password})
+  }).then(result => result.json()).then( response => {
+    console.log(response);
 
-    if(success) {
-      clearMessages();
-      toChatView();
+    switch (response) {
+      case "valid":
+        clearMessages();
+        toChatView();
 
-      //console.log("sockets:")
-      //console.log(new WebSocket(socketRoute.replace("http", "ws")))
-      //console.log(new WebSocket(socketSessionRoute.replace("http", "ws")))
+        socket = new WebSocket(socketSessionRoute.replace("http", "ws"));
+        socket.onopen = (e) => socket.send("Joined Chat!!!");
+        socket.onmessage = (event) => {
+          if(chatArea.value === "") {
+            chatArea.value += event.data;
+          } else {
+            chatArea.value += '\n' + event.data;
+          }
+        };
+        break;
 
-      socket = new WebSocket(socketSessionRoute.replace("http", "ws"));
-      socket.onopen = (e) => socket.send("Joined Chat!!!")
-      socket.onmessage = (event) => {
-        chatArea.value += '\n' + event.data;
-      }
-    } else {
-      document.getElementById("login-message").innerText = "Username in use!"
+      case "logged":
+        document.getElementById("login-message").innerText = "Username in use!";
+        break;
+
+      case "invalid":
+        document.getElementById("login-message").innerText = "Invalid Username or Password";
+        break;
     }
-  })
+  });
 }

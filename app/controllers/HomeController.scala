@@ -5,6 +5,7 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.Flow
+import models.{MemoryModel, ValidationResponse}
 
 import javax.inject._
 import play.api._
@@ -14,6 +15,7 @@ import play.api.mvc.WebSocket.MessageFlowTransformer.stringMessageFlowTransforme
 import play.api.mvc._
 
 import scala.concurrent.Future
+import models.MemoryModel
 
 trait WebProtocol
 
@@ -23,8 +25,14 @@ trait WebProtocol
  */
 @Singleton
 class HomeController @Inject()(val cc: ControllerComponents)(implicit system: ActorSystem, mat: Materializer) extends AbstractController(cc) {
-  private var users = List.empty[String]
-  private val manager: ActorRef = system.actorOf(ChatManager.props(), "Manager")
+  //private var users = List.empty[String]
+  //private val manager: ActorRef = system.actorOf(ChatManager.props(), "Manager")
+
+  private case class UserData(username: String, password: String)
+  private implicit val UserDataReads: Reads[UserData] = Json.reads[UserData]
+
+  //setup initial manager in memory model
+  MemoryModel.addManager(system.actorOf(ChatManager.props(), "default"))
 
   private def withJson[A](f: A => Result)(implicit request: Request[AnyContent], reads: Reads[A]) = {
     request.body.asJson.map { body =>
@@ -41,7 +49,7 @@ class HomeController @Inject()(val cc: ControllerComponents)(implicit system: Ac
 
   def socket = WebSocket.accept[String, String] { request =>
     ActorFlow.actorRef { out =>
-      ChatActor.props(out, manager, "guest")
+      ChatActor.props(out, MemoryModel.getManager("default").get, "guest")
     }
   }
 
@@ -50,19 +58,21 @@ class HomeController @Inject()(val cc: ControllerComponents)(implicit system: Ac
       case None => Left(Forbidden)
       case Some(username) =>
         Right(ActorFlow.actorRef(out =>
-          ChatActor.props(out, manager, username)
+          ChatActor.props(out, MemoryModel.getManager("default").get, username)
         ))
     })
   }
 
   def validateLogin = Action { implicit request =>
-    withJson[String] { data =>
-      if(!users.contains(data)) {
-        users = data :: users
-        Ok(Json.toJson(true))
-          .withSession("username" -> data, "csrfToken" -> play.filters.csrf.CSRF.getToken.get.value)
-      } else {
-        Ok(Json.toJson(false))
+    withJson[UserData] { data =>
+      MemoryModel.validateLogin(data.username, data.password) match {
+        case ValidationResponse.valid =>
+          Ok(Json.toJson(ValidationResponse.valid))
+            .withSession("username" -> data.username, "csrfToken" -> play.filters.csrf.CSRF.getToken.get.value)
+        case ValidationResponse.logged =>
+          Ok(Json.toJson(ValidationResponse.logged))
+        case ValidationResponse.invalid =>
+          Ok(Json.toJson(ValidationResponse.invalid))
       }
     }
   }
