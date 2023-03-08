@@ -2,12 +2,13 @@ package actors
 
 import actors.ChatActor.Msg
 import actors.ChatManager.SendMessage
-import akka.actor.ActorRef
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, PoisonPill, Props}
 import controllers.WebProtocol
 
 class ChatActor(client: ActorRef, manager: ActorRef, username: String) extends Actor {
-  manager ! ChatManager.AddUser(self)
+  manager ! ChatManager.AddUser(self, username)
+  //todo: watch client for terminating, if it does.. kill this actor too
+  //context.watchWith(client, ClientDropped)
 
   override def receive: Receive = {
     case msg: String =>

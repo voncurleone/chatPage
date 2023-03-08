@@ -25,8 +25,6 @@ trait WebProtocol
  */
 @Singleton
 class HomeController @Inject()(val cc: ControllerComponents)(implicit system: ActorSystem, mat: Materializer) extends AbstractController(cc) {
-  //private var users = List.empty[String]
-  //private val manager: ActorRef = system.actorOf(ChatManager.props(), "Manager")
 
   private case class UserData(username: String, password: String)
   private implicit val UserDataReads: Reads[UserData] = Json.reads[UserData]
@@ -41,6 +39,10 @@ class HomeController @Inject()(val cc: ControllerComponents)(implicit system: Ac
         case JsError(errors) => Redirect(routes.HomeController.index())
       }
     }.getOrElse(Redirect(routes.HomeController.index()))
+  }
+
+  def withSession(f: String => Result)(implicit request: Request[AnyContent]) = {
+    request.session.get("username").map(f).getOrElse(Redirect(routes.HomeController.index()))
   }
 
   def index() = Action { implicit request =>
@@ -74,6 +76,13 @@ class HomeController @Inject()(val cc: ControllerComponents)(implicit system: Ac
         case ValidationResponse.invalid =>
           Ok(Json.toJson(ValidationResponse.invalid))
       }
+    }
+  }
+
+  def logout = Action { implicit request =>
+    withSession { username =>
+      MemoryModel.logout(username)
+      Ok(Json.toJson(true)).withSession(request.session - "username")
     }
   }
 }

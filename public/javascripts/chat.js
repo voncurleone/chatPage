@@ -5,6 +5,7 @@ const csrfToken = document.getElementById("csrf-token").value;
 const validateRoute = document.getElementById("validate-route").value;
 const socketRoute = document.getElementById("socket-route").value;
 const socketSessionRoute = document.getElementById("socket-session-route").value;
+const logoutRoute = document.getElementById("logout-route").value;
 
 //chat area
 const chatArea = document.getElementById("chat")
@@ -33,8 +34,24 @@ function toChatView() {
   document.getElementById("chat-div").hidden = false;
 }
 
+function toLoginView() {
+  document.getElementById("login-div").hidden = false;
+  document.getElementById("chat-div").hidden = true;
+}
+
 function clearMessages() {
   document.getElementById("login-message").innerText = "";
+  document.getElementById("logout-message").innerText = "";
+}
+
+function clearLoginForm() {
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+}
+
+function clearChatView() {
+  document.getElementById("chat").value = "";
+  document.getElementById("input").value = "";
 }
 
 //login button
@@ -54,6 +71,7 @@ function login() {
       case "valid":
         clearMessages();
         toChatView();
+        clearLoginForm();
 
         socket = new WebSocket(socketSessionRoute.replace("http", "ws"));
         socket.onopen = (e) => socket.send("Joined Chat!!!");
@@ -73,6 +91,22 @@ function login() {
       case "invalid":
         document.getElementById("login-message").innerText = "Invalid Username or Password";
         break;
+    }
+  });
+}
+
+// logout button
+function logout() {
+  console.log("logging out");
+
+  fetch(logoutRoute).then(result => result.json()).then(data => {
+    if(data) {
+      socket.close();
+      socket = {};
+      clearChatView();
+      toLoginView();
+    } else {
+      document.getElementById("logout-message").innerText = "Logout failed!";
     }
   });
 }

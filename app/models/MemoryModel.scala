@@ -37,6 +37,12 @@ object MemoryModel {
     }
   }
 
-  def logout(username: String): Boolean = ???
+  def logout(username: String): Boolean = {
+    /*
+    * Chat Manager will be responsible for removing the actor from its user
+    */
+    userStatus(username) = false
+    true
+  }
   def getManager(name: String): Option[ActorRef] = managers.find(_.path.name == name)
 }

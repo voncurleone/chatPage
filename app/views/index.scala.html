@@ -21,6 +21,9 @@
     <input type="text" id="input" size="80">
     <button onclick="send()">Send</button>
     <button onclick="logout()">Logout</button>
+
+    <br>
+    <div id="logout-message"></div>
   </div>
 
   <!-- csrfToken -->
@@ -30,6 +33,7 @@
   <input type="hidden" id="validate-route" value="@routes.HomeController.validateLogin">
   <input type="hidden" id="socket-route" value="@routes.HomeController.socket.absoluteURL()">
   <input type="hidden" id="socket-session-route" value="@routes.HomeController.socketSession.absoluteURL()">
+  <input type="hidden" id="logout-route" value="@routes.HomeController.logout">
 
   <!-- javascript -->
   <script src="@routes.Assets.versioned("javascripts/chat.js")"></script>
