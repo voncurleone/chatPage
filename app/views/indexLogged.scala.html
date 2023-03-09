@@ -1,0 +1,42 @@
+@()(implicit requestHeader: RequestHeader, flash: Flash)
+
+@main("Chat") {
+
+  <div id="login-div" hidden>
+    <h2>Login</h2>
+    Username: <input type="text" id="username">
+    <br>
+    Password: <input type="password" id="password">
+    <br>
+    <button onclick="login()">login</button>
+
+    <br>
+    <div id="login-message"></div>
+  </div>
+
+  <div id="chat-div">
+    <h1>Welcome to Chat!</h1>
+    <textarea id="chat" rows="15" cols="80"></textarea>
+    <br>
+    <input type="text" id="input" size="80">
+    <button onclick="send()">Send</button>
+    <button onclick="logout()">Logout</button>
+
+    <br>
+    <div id="logout-message"></div>
+  </div>
+
+    <!-- csrfToken -->
+  <input type="hidden" id="csrf-token" value="@helper.CSRF.getToken.value">
+
+    <!-- routes -->
+  <input type="hidden" id="validate-route" value="@routes.HomeController.validateLogin">
+  <input type="hidden" id="socket-route" value="@routes.HomeController.socket.absoluteURL()">
+  <input type="hidden" id="socket-session-route" value="@routes.HomeController.socketSession.absoluteURL()">
+  <input type="hidden" id="logout-route" value="@routes.HomeController.logout">
+  <input type="hidden" id="logged-value" value="@true">
+
+
+    <!-- javascript -->
+  <script src="@routes.Assets.versioned("javascripts/chat.js")"></script>
+}

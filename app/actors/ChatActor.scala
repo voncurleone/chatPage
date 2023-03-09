@@ -7,8 +7,6 @@ import controllers.WebProtocol
 
 class ChatActor(client: ActorRef, manager: ActorRef, username: String) extends Actor {
   manager ! ChatManager.AddUser(self, username)
-  //todo: watch client for terminating, if it does.. kill this actor too
-  //context.watchWith(client, ClientDropped)
 
   override def receive: Receive = {
     case msg: String =>

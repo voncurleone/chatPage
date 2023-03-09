@@ -19,6 +19,9 @@ object MemoryModel {
   //actors
   private val managers: mutable.Set[ActorRef] = mutable.Set.empty[ActorRef]
 
+  //log
+  private def log(msg: String): Unit = println("[MemoryModel] " + msg)
+
   def addManager(manager: ActorRef): Boolean = {
     managers += manager
     true
@@ -28,6 +31,11 @@ object MemoryModel {
     if(users.get(username).contains(password)) {
       if(userStatus.get(username).contains(false)) {
         userStatus(username) = true
+
+        //val fun = "validateLogin: "
+        //log(fun + users.toString())
+        //log(fun + userStatus.toString())
+
         valid
       } else {
         logged
@@ -42,6 +50,11 @@ object MemoryModel {
     * Chat Manager will be responsible for removing the actor from its user
     */
     userStatus(username) = false
+
+    //val fun = "logout: "
+    //log(fun + users.toString())
+    //log(fun + userStatus.toString())
+
     true
   }
   def getManager(name: String): Option[ActorRef] = managers.find(_.path.name == name)

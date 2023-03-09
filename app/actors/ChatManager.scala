@@ -8,7 +8,9 @@ import controllers.WebProtocol
 class ChatManager() extends Actor {
   private var users = List.empty[ActorRef]
   private var usernames = List.empty[String]
-  //todo: watch users for actor termination, then remove from list
+
+  //log
+  private def log(msg: String): Unit = println("[ChatManager] " + msg)
 
   override def receive: Receive = {
     case AddUser(user, username) =>
@@ -22,12 +24,20 @@ class ChatManager() extends Actor {
 
     case UserDropped(user) =>
       val index = users.indexOf(user)
+      val username = usernames(index)
+      //log("Before: " + users)
+      //log("Before: " + usernames)
+
       users = users.filter(_ != user)
-      for (u <- users) {
-        u ! Msg(usernames(index) + ": disconnected!")
+      usernames = usernames.take(index) ::: usernames.drop(index + 1)
+      if(!usernames.contains(username)) {
+        for (u <- users) {
+          u ! Msg(username + ": disconnected!")
+        }
       }
 
-      usernames = usernames.filter(_ != usernames(index))
+      //log("After: " + users)
+      //log("After: " + usernames)
 
     case m => println("Unhandled by chatManager: " + m)
   }

@@ -11,6 +11,16 @@ const logoutRoute = document.getElementById("logout-route").value;
 const chatArea = document.getElementById("chat")
 const inputText = document.getElementById("input")
 
+//socket
+let socket = {};
+
+//check if logged or not
+const logged = document.getElementById("logged-value").value;
+console.log(logged);
+if(logged === "true") {
+  createSocket();
+}
+
 //input text key event
 inputText.onkeydown = (event) => {
   if(event.key === 'Enter') {
@@ -25,8 +35,18 @@ function send() {
   inputText.value = '';
 }
 
-//socket
-let socket = {};
+//create socket
+function createSocket() {
+  socket = new WebSocket(socketSessionRoute.replace("http", "ws"));
+  //socket.onopen = (e) => socket.send("Joined Chat!!!");
+  socket.onmessage = (event) => {
+    if(chatArea.value === "") {
+      chatArea.value += event.data;
+    } else {
+      chatArea.value += '\n' + event.data;
+    }
+  };
+}
 
 //view switching
 function toChatView() {
@@ -72,8 +92,12 @@ function login() {
         clearMessages();
         toChatView();
         clearLoginForm();
+        createSocket();
 
-        socket = new WebSocket(socketSessionRoute.replace("http", "ws"));
+        // joined chat message
+        socket.onopen = (e) => socket.send("Joined Chat!!!");
+
+        /*socket = new WebSocket(socketSessionRoute.replace("http", "ws"));
         socket.onopen = (e) => socket.send("Joined Chat!!!");
         socket.onmessage = (event) => {
           if(chatArea.value === "") {
@@ -81,7 +105,7 @@ function login() {
           } else {
             chatArea.value += '\n' + event.data;
           }
-        };
+        };*/
         break;
 
       case "logged":
@@ -96,6 +120,8 @@ function login() {
 }
 
 // logout button
+//todo: there is an issue if two tabs share a session with the second tabs logout.
+// it will not update or disconnect until refresh
 function logout() {
   console.log("logging out");
 

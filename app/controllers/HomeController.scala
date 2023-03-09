@@ -32,6 +32,9 @@ class HomeController @Inject()(val cc: ControllerComponents)(implicit system: Ac
   //setup initial manager in memory model
   MemoryModel.addManager(system.actorOf(ChatManager.props(), "default"))
 
+  //logging
+  private def log(msg: String): Unit = println("[HomeController] " + msg)
+
   private def withJson[A](f: A => Result)(implicit request: Request[AnyContent], reads: Reads[A]) = {
     request.body.asJson.map { body =>
       Json.fromJson[A](body)(reads) match {
@@ -41,12 +44,15 @@ class HomeController @Inject()(val cc: ControllerComponents)(implicit system: Ac
     }.getOrElse(Redirect(routes.HomeController.index()))
   }
 
-  def withSession(f: String => Result)(implicit request: Request[AnyContent]) = {
-    request.session.get("username").map(f).getOrElse(Redirect(routes.HomeController.index()))
+  private def withSession(f: String => Result)(implicit request: Request[AnyContent]) = {
+    request.session.get("username").map(f).getOrElse(Ok(views.html.index()))
   }
 
   def index() = Action { implicit request =>
-    Ok(views.html.index())
+    withSession { username =>
+      Ok(views.html.indexLogged())
+    }
+    //Ok(views.html.index())
   }
 
   def socket = WebSocket.accept[String, String] { request =>
@@ -81,6 +87,9 @@ class HomeController @Inject()(val cc: ControllerComponents)(implicit system: Ac
 
   def logout = Action { implicit request =>
     withSession { username =>
+      //val fun = "logout: "
+      //log(fun + s"$username logging out")
+
       MemoryModel.logout(username)
       Ok(Json.toJson(true)).withSession(request.session - "username")
     }
