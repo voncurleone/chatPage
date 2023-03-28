@@ -37,7 +37,7 @@ function send() {
 
 //create socket
 function createSocket() {
-  socket = new WebSocket(socketSessionRoute.replace("http", "ws"));
+  socket = new WebSocket(socketSessionRoute.replace("http", "wss"));
   //socket.onopen = (e) => socket.send("Joined Chat!!!");
   socket.onmessage = (event) => {
     if(chatArea.value === "") {
